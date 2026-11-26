@@ -1,6 +1,6 @@
 test_id,scenario,email,password,expected,expected_message,reaches_server
-TC-L04,Both fields empty,,,error,enter your username or email|fill in the fields,no
-TC-L05,Email filled + password empty,${EDX_VALID_EMAIL},,error,password criteria|enter your password|fill in the fields,no
-TC-L03,Unregistered email,group4.not.registered.2026@example.com,AnyPass!2026,error,incorrect|couldn't sign you in|could not sign you in,yes
-TC-L02,Valid email + wrong password,${EDX_VALID_EMAIL},WrongPass!2026,error,incorrect|couldn't sign you in|could not sign you in,yes
 TC-L01,Valid registered account,${EDX_VALID_EMAIL},${EDX_VALID_PASSWORD},success,,yes
+TC-L04,Both fields empty,,,error,enter your username or email|fill in the fields,no
+TC-L05,Email filled + password empty,${EDX_VALID_EMAIL},,error,enter your password|password criteria|fill in the fields,no
+TC-L02,Valid email + wrong password,${EDX_VALID_EMAIL},WrongPass!2026,error,password you entered is incorrect|is incorrect,yes
+TC-L03,Unregistered email,group4.not.registered.2026@example.com,AnyPass!2026,error,password you entered is incorrect|is incorrect,yes

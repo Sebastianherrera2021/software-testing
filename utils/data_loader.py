@@ -12,6 +12,20 @@ from pathlib import Path
 _PLACEHOLDER = re.compile(r"\$\{(\w+)\}")
 
 
+class Row(dict):
+    """A data row that hides the password whenever it is printed.
+
+    pytest prints test parameters in failure tracebacks and in the HTML report;
+    without this, a failed test would show the real password in plain text.
+    """
+
+    def __repr__(self):
+        shown = {k: ("***" if k == "password" and v else v) for k, v in self.items()}
+        return repr(shown)
+
+    __str__ = __repr__
+
+
 def _resolve(value):
     """Replace ${VAR} placeholders with environment variables ('' if missing)."""
     return _PLACEHOLDER.sub(lambda m: os.getenv(m.group(1), ""), value or "")
@@ -29,4 +43,4 @@ def load_rows(path):
         with path.open(newline="", encoding="utf-8") as f:
             raw = list(csv.DictReader(f))
 
-    return [{k: _resolve(v) for k, v in row.items()} for row in raw if any(row.values())]
+    return [Row({k: _resolve(v) for k, v in row.items()}) for row in raw if any(row.values())]

@@ -65,6 +65,10 @@ class LoginPage(BasePage):
         """Wait for either the server error banner or a field validation message
         and return all visible error text, lower-cased."""
         self.find_first(config.LOGIN_ERROR_BANNER + config.LOGIN_FIELD_ERROR)
+        return self.visible_error_text()
+
+    def visible_error_text(self):
+        """Return the error text visible right now (no waiting), lower-cased."""
         texts = []
         for locator in config.LOGIN_ERROR_BANNER + config.LOGIN_FIELD_ERROR:
             for element in self.driver.find_elements(*locator):

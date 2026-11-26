@@ -64,25 +64,25 @@ The test is data-driven: every row of `data/login_data.csv` becomes one pytest c
 
 | Run order | ID | Scenario | Type | Reaches server | Expected result |
 |---|---|---|---|---|---|
-| 1 | TC-L04 | Both fields empty | Negative | No | "Enter your username or email" |
-| 2 | TC-L05 | Email filled, password empty | Negative | No | "Enter your password" |
-| 3 | TC-L03 | Unregistered email | Negative | Yes | "We couldn't sign you in" / credentials incorrect |
-| 4 | TC-L02 | Valid email, wrong password | Negative | Yes | Same credentials error |
-| 5 | TC-L01 | Valid registered account | Positive | Yes | "My Courses" dashboard, profile menu visible, Sign Out exists |
+| 1 | TC-L01 | Valid registered account | Positive | Yes | "My Courses" dashboard, profile menu visible, Sign Out exists |
+| 2 | TC-L04 | Both fields empty | Negative | No | "Enter your username or email" |
+| 3 | TC-L05 | Email filled, password empty | Negative | No | "Enter your password" |
+| 4 | TC-L02 | Valid email, wrong password | Negative | Yes | "The username, email, or password you entered is incorrect" |
+| 5 | TC-L03 | Unregistered email | Negative | Yes | Same credentials error |
 
 ### Lockout and CAPTCHA plan
 
-Repeated failed logins can lock an account or trigger a visible CAPTCHA, so the rows were planned to keep failed attempts to a minimum. Only two of the five rows reach the server with invalid credentials (TC-L03 and TC-L02), and only TC-L02 uses the real test account; TC-L04 and TC-L05 are stopped by the form's client-side validation before any request is sent. A full run therefore produces a single failed attempt against the test account. The valid login runs last, so every run ends with a successful sign-in, which in Open edX (the platform behind edX) clears the failed-attempt counter.
+edX blocks sign-in after repeated failed attempts. This was observed on 25 November 2026: after several runs on the same day, the valid login (then the last row) was refused with "Too many failed login attempts. Try again later." The rows are therefore ordered around that risk. The valid login runs first, before the run has made any failed attempt. The two client-side checks follow; TC-L04 and TC-L05 are stopped by the form's own validation and never send a request to edX. The two rows that send invalid credentials to the server (TC-L02 and TC-L03) run last, so they cannot block the positive test, and only TC-L02 uses the real test account.
 
-edX loads an invisible reCAPTCHA on the login page. If a visible challenge appears, the script skips the test with a clear message instead of trying to bypass it. The full suite is run at most a few times per hour, and a single row can be rerun on its own with `pytest -k "TC-L04"`.
+If the rate limit is already active when a row runs, the test is skipped with the reason "edX rate limit active" rather than reported as a defect, and the negative rows only accept the specific "password you entered is incorrect" message, so a lockout banner can never make them pass by mistake. Runs of the full suite should be spaced out (at least 30 minutes apart), and a single row can be rerun on its own with `pytest -k "TC-L04"`.
 
-The positive path makes three assertions: the URL has moved away from `/login` to an edX page, the user menu or avatar is visible, and a logout link exists. Each negative path also makes three assertions: an error message is displayed, its text matches one of the expected messages for that row (alternatives separated by `|` in the CSV, so small wording changes on edX do not break the test), and the browser is still on the login page.
+edX also loads an invisible reCAPTCHA on the login page. If a visible challenge appears, the script skips the test with a clear message instead of trying to bypass it.
 
-All synchronisation uses explicit waits (`WebDriverWait` in `pages/base_page.py`); there is no `time.sleep`. Each element has a list of fallback locators in `config.py`, so a single UI change on edX means editing one file. Techniques from the test plan map onto the rows: equivalence partitioning (valid, invalid and empty inputs), a decision table over the combinations of email and password validity, and error guessing.
+Test data rows hide the password whenever pytest prints them (`utils/data_loader.py`), so it never appears in tracebacks or in the HTML report.
 
 ## Latest run
 
-On 24 November 2026 (Windows 11, Chrome, Python 3.10.11, pytest 9.2) all five Flow 2 cases passed in 1 min 42 s: TC-L01 reached the "My Courses" dashboard with the user menu and "Sign Out" visible, and TC-L02 to TC-L05 showed the expected edX error messages. Screenshots and the HTML report are kept locally as evidence and are not committed, because they show the test account's name and email.
+On 24 November 2026 (Windows 11, Chrome, Python 3.10.11, pytest 9.2) all five Flow 2 cases passed in 1 min 42 s: TC-L01 reached the "My Courses" dashboard with the user menu and "Sign Out" visible, and TC-L02 to TC-L05 showed the expected edX error messages. A second run on 25 November 2026 confirmed edX's lockout behaviour described above. Screenshots and the HTML report are kept locally as evidence and are not committed, because they show the test account's name and email.
 
 ## Notes and known risks
 
