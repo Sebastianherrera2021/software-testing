@@ -1,8 +1,14 @@
-# tests/test_flow2_login.py - Flow 2: edX login (data-driven, explicit waits, negative tests)
+# tests/test_flow2_login.py - Flow 2: edX login = "Enrollment Readiness Challenge"
 # Owner: Juan Sebastian Herrera (C0965669) - Automation Lead Flow 2 & GitHub Coordinator
 # AI usage note: drafted with Claude (Anthropic) and reviewed by Sebastian Herrera.
 #
-# Each CSV row in data/login_data.csv becomes one test case.
+# Scenario: a returning learner signs in and must reach the "My Courses" dashboard,
+# where enrollments are managed. Invalid or missing credentials must be blocked.
+#
+# Each CSV row in data/login_data.csv becomes one test case, run in file order.
+# Rows are ordered to limit lockout/CAPTCHA risk: client-side checks first,
+# then the two server-side failures, and the valid login LAST so every run
+# ends with a successful sign-in on the test account.
 #   expected = success -> positive test, 3 assertions (URL, profile visible, logout exists)
 #   expected = error   -> negative test, asserts the correct error message is shown
 
