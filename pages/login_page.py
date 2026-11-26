@@ -1,8 +1,11 @@
 # pages/login_page.py - Page Object for the edX home page "Sign in" link and the login form
 # AI usage note: drafted with Claude (Anthropic) and reviewed by Sebastian Herrera.
 
-from selenium.common.exceptions import TimeoutException
-from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import (
+    ElementClickInterceptedException,
+    TimeoutException,
+    WebDriverException,
+)
 
 import config
 from pages.base_page import BasePage
@@ -24,14 +27,23 @@ class LoginPage(BasePage):
         return self
 
     def dismiss_cookies(self):
-        """Close the cookie banner so it cannot cover the buttons we click."""
-        try:
-            self.click_with_timeout(config.COOKIE_REJECT, timeout=4)
-        except TimeoutException:
-            pass
+        """Close the cookie banner so it cannot cover the buttons we click.
 
-    def click_with_timeout(self, locators, timeout):
-        self.find_first(locators, condition=EC.element_to_be_clickable, timeout=timeout).click()
+        The banner slides in with an animation; a normal click during the
+        animation can be intercepted (seen on 25 Nov 2026). In that case we
+        click the button through JavaScript. The banner is not part of the
+        login flow, so problems here never fail the test.
+        """
+        try:
+            button = self.find_first(config.COOKIE_REJECT, timeout=4)
+        except TimeoutException:
+            return  # no banner shown
+        try:
+            button.click()
+        except ElementClickInterceptedException:
+            self.driver.execute_script("arguments[0].click();", button)
+        except WebDriverException:
+            pass
 
     def captcha_present(self):
         return self.is_present(config.CAPTCHA_FRAMES, timeout=2)
