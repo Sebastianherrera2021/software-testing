@@ -7,6 +7,7 @@
 import csv
 import os
 import re
+from datetime import datetime
 from pathlib import Path
 
 _PLACEHOLDER = re.compile(r"\$\{(\w+)\}")
@@ -26,9 +27,36 @@ class Row(dict):
     __str__ = __repr__
 
 
+def _generated_values():
+    """Values created fresh for each test run, so a new account never repeats.
+
+    UNIQUE_EMAIL uses "plus addressing": mediclifeee+edxqa261126235501@gmail.com
+    is delivered to mediclifeee@gmail.com, so the team receives edX's emails
+    and can later delete each test account.
+    """
+    stamp = datetime.now().strftime("%y%m%d%H%M%S")
+    base = os.getenv("EDX_SIGNUP_EMAIL") or os.getenv("EDX_VALID_EMAIL", "")
+    unique_email = ""
+    if "@" in base:
+        local, domain = base.split("@", 1)
+        unique_email = f"{local.split('+')[0]}+edxqa{stamp}@{domain}"
+    return {
+        "RUN_STAMP": stamp,
+        "UNIQUE_EMAIL": unique_email,
+        "UNIQUE_USERNAME": f"g4qa{stamp}",
+    }
+
+
+_GENERATED = _generated_values()
+
+
 def _resolve(value):
-    """Replace ${VAR} placeholders with environment variables ('' if missing)."""
-    return _PLACEHOLDER.sub(lambda m: os.getenv(m.group(1), ""), value or "")
+    """Replace ${VAR} placeholders with generated run values or environment
+    variables ('' if missing)."""
+    def lookup(m):
+        name = m.group(1)
+        return _GENERATED.get(name) or os.getenv(name, "")
+    return _PLACEHOLDER.sub(lookup, value or "")
 
 
 def load_rows(path):
