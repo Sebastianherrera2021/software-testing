@@ -58,6 +58,10 @@ pytest -v --html=reports/flow2_report.html --self-contained-html
 
 Each test saves a screenshot in `screenshots/` with the test name, PASS/FAIL status and the date and time stamped on the page, which is the evidence required by the team agreement.
 
+Each test also records a step-by-step video in `videos/` (MP4, or an animated GIF if MP4 support is missing). Selenium has no built-in screen recorder, so `utils/recorder.py` listens to every navigation, click and typing action, takes a screenshot after each one, writes the step on it ("Step 3: Type into 'email'", "Result: PASS") and joins the frames. Passwords are never readable in the video because edX masks the field and the caption says "Type password (hidden)". Set `RECORD_VIDEO=0` to turn videos off. Videos are evidence for the report and, like screenshots, are not committed.
+
+Before creating the account, the test also checks that `EDX_SIGNUP_PASSWORD` is not too similar to the generated email, username or name (edX rejects such passwords); if it is, the test is skipped with a message asking for an unrelated password, so a bad test password is never reported as a defect.
+
 ## Flow 2 — Account creation: design
 
 The test is data-driven: every row of `data/register_data.csv` becomes one pytest case through `@pytest.mark.parametrize`, run in the order of the file. The `expected` column decides which branch runs, and the `creates_account` column documents which rows create a real edX account.

@@ -5,3 +5,4 @@ venv/
 .venv/
 reports/
 screenshots/*.png
+videos/

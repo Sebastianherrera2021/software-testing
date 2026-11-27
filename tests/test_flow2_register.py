@@ -12,6 +12,8 @@
 #                         error shown, correct message, still on the form
 # The valid row runs first; the five negative rows never create an account.
 
+import re
+from difflib import SequenceMatcher
 from pathlib import Path
 
 import pytest
@@ -25,12 +27,29 @@ DATA_FILE = Path(__file__).resolve().parents[1] / "data" / "register_data.csv"
 ROWS = load_rows(DATA_FILE)
 
 RATE_LIMIT_HINTS = ("too many", "try again later")
+MAX_SIMILARITY = 0.7    # edX (Django) rejects passwords this similar to the user's details
+
+
+def _too_similar(password, *details):
+    """True if the password is close to the email, username or name.
+    Checked before submitting so a bad test password is not mistaken for a defect."""
+    pw = password.lower()
+    for detail in details:
+        for part in [detail] + re.split(r"\W+", detail or ""):
+            part = (part or "").lower()
+            if len(part) > 2 and (part in pw or SequenceMatcher(a=pw, b=part).quick_ratio() >= MAX_SIMILARITY):
+                return True
+    return False
 
 
 @pytest.mark.parametrize("row", ROWS, ids=[r["test_id"] for r in ROWS])
 def test_register(driver, row):
     if row["expected"] == "success" and not (row["email"] and row["password"]):
         pytest.skip("EDX_SIGNUP_EMAIL / EDX_SIGNUP_PASSWORD not set in .env (see .env.example)")
+    if row["expected"] == "success" and _too_similar(
+            row["password"], row["email"], row["username"], row["full_name"]):
+        pytest.skip("EDX_SIGNUP_PASSWORD is too similar to the email, username or name; "
+                    "edX would reject it. Choose an unrelated password in .env")
     if "already" in row["expected_message"] and not row["email"]:
         pytest.skip("EDX_VALID_EMAIL not set in .env: needed for the 'email already registered' case")
 
