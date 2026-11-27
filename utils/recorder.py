@@ -9,7 +9,7 @@ import io
 from datetime import datetime
 from pathlib import Path
 
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 from selenium.webdriver.support.events import AbstractEventListener
 
 FRAME_SECONDS = 1.2     # how long each step stays on screen in the video
@@ -65,8 +65,8 @@ class StepRecorder(AbstractEventListener):
             frame = image.resize(size)
             draw = ImageDraw.Draw(frame)
             label = f"Step {number}: {caption}"
-            draw.rectangle([0, size[1] - 40, size[0], size[1]], fill=(17, 17, 17))
-            draw.text((12, size[1] - 30), label, fill=(255, 255, 255))
+            draw.rectangle([0, size[1] - 48, size[0], size[1]], fill=(17, 17, 17))
+            draw.text((14, size[1] - 40), label, fill=(255, 255, 255), font=_font())
             images.append(frame)
 
         path = Path(path_without_suffix)
@@ -87,6 +87,14 @@ class StepRecorder(AbstractEventListener):
             small[0].save(gif, save_all=True, append_images=small[1:],
                           duration=int(FRAME_SECONDS * 1000), loop=0)
             return gif
+
+
+def _font():
+    """Readable caption font (Pillow >= 10.1 can scale its built-in font)."""
+    try:
+        return ImageFont.load_default(size=28)
+    except TypeError:
+        return ImageFont.load_default()
 
 
 def _even(image):

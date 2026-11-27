@@ -37,6 +37,7 @@ REG_EMAIL = [(By.ID, "email"), (By.NAME, "email")]
 REG_USERNAME = [(By.ID, "username"), (By.NAME, "username")]
 REG_PASSWORD = [(By.ID, "password"), (By.NAME, "password")]
 REG_COUNTRY = [(By.NAME, "country"), (By.ID, "form-field1")]   # usually pre-filled from location
+REG_MARKETING_OPT_IN = [(By.ID, "marketingEmailsOptIn")]   # ticked by default on edX (seen 27 Nov 2026)
 REG_SUBMIT = [(By.ID, "register-user"), (By.CSS_SELECTOR, "button[type='submit']")]
 
 # Banner shown when the form is rejected ("We couldn't create your account.")
@@ -50,10 +51,16 @@ REG_FIELD_ERROR = [
     (By.CSS_SELECTOR, ".invalid-feedback"),
 ]
 
-# Optional "welcome" questionnaire edX may show right after an account is created
+# After an account is created edX shows "A few questions for you..." (/welcome).
+# Clicking "Skip for now" opens a "Thanks for letting us know." dialog whose
+# "Continue to edX" button finally leads to the dashboard (seen in the 27 Nov 2026 video).
 WELCOME_SKIP = [
     (By.XPATH, "//button[contains(normalize-space(.), 'Skip for now')]"),
     (By.XPATH, "//a[contains(normalize-space(.), 'Skip for now')]"),
+]
+WELCOME_CONTINUE = [
+    (By.XPATH, "//button[contains(normalize-space(.), 'Continue to edX')]"),
+    (By.XPATH, "//a[contains(normalize-space(.), 'Continue to edX')]"),
 ]
 
 # Anti-bot widgets. The project never tries to bypass them: if one appears the test is skipped.

@@ -7,6 +7,7 @@ from selenium.common.exceptions import (
     WebDriverException,
 )
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support import expected_conditions as EC
 
 import config
 from pages.base_page import BasePage
@@ -57,7 +58,21 @@ class RegisterPage(BasePage):
         self.type(config.REG_USERNAME, username)
         self.type(config.REG_PASSWORD, password)
         self._ensure_country()
-        # The marketing-emails checkbox is left unticked (privacy-preserving default).
+        self._untick_marketing()
+
+    def _untick_marketing(self):
+        """edX ticks 'I agree that edX may send me marketing messages' by default.
+        The test always unticks it (privacy-preserving choice)."""
+        try:
+            box = self.find_first(config.REG_MARKETING_OPT_IN,
+                                  condition=EC.presence_of_element_located, timeout=3)
+        except TimeoutException:
+            return
+        if box.is_selected():
+            try:
+                box.click()
+            except WebDriverException:
+                self.driver.execute_script("arguments[0].click();", box)
 
     def _ensure_country(self):
         """edX pre-fills the country from the user's location; fill it only if empty."""
@@ -81,9 +96,15 @@ class RegisterPage(BasePage):
         return self.driver.current_url
 
     def skip_welcome_if_shown(self):
-        """edX may show an optional questionnaire after sign-up; skip it."""
-        try:
-            self.click_first(config.WELCOME_SKIP, timeout=6)
+        """Go through edX's optional questionnaire after sign-up:
+        'Skip for now' -> 'Thanks for letting us know.' -> 'Continue to edX'."""
+        for step in (config.WELCOME_SKIP, config.WELCOME_CONTINUE):
+            try:
+                self.click_first(step, timeout=8)
+            except TimeoutException:
+                pass
+        try:   # explicit wait: questionnaire page is gone
+            self._wait().until(lambda d: "/welcome" not in d.current_url)
         except TimeoutException:
             pass
 

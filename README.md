@@ -73,13 +73,19 @@ The test is data-driven: every row of `data/register_data.csv` becomes one pytes
 | 3 | TC-R03 | Invalid email format | Negative | No | "Enter a valid email address" |
 | 4 | TC-R04 | Weak password ("abc") | Negative | No | "Password criteria has not been met" / at least 8 characters |
 | 5 | TC-R05 | Email already registered | Negative | No | Email already associated with an existing account |
-| 6 | TC-R06 | Username of one character | Negative | No | "Username must be between 2 and 30 characters" |
+| 6 | TC-R06 | Username of one character | Negative | No | "Username must be between 3 and 50 characters" |
 
 The positive case makes three assertions: the browser has left `/register` for another edX page, no error message is visible, and the new learner is signed in (user menu and a logout option). Each negative case also makes three: an error is displayed, its text matches the expected message for that row (alternatives separated by `|`), and the browser is still on the registration form, so no account was created. Techniques from the test plan map onto the rows: equivalence partitioning and boundary values (empty fields, a one-character username, a three-character password), a decision table over valid and invalid field combinations, and error guessing (an email that is already registered).
 
 ### Test data and account creation
 
 Every run of TC-R01 creates one real edX account, so its email and username must be new each time. They are generated at run time from the date and time: the username is `g4qa` plus a timestamp, and the email uses plus addressing on the team's inbox (`name+edxqa<timestamp>@gmail.com`), which Gmail delivers to the base inbox. The team therefore receives edX's emails for each test account and can delete those accounts at the end of the project from edX's Account Settings. The base inbox and the password for new accounts are set in `.env` (`EDX_SIGNUP_EMAIL`, `EDX_SIGNUP_PASSWORD`); TC-R05 uses an existing account's email (`EDX_VALID_EMAIL`). None of these values are committed, and the password is hidden whenever pytest prints a row.
+
+### What edX does after the account is created
+
+The run on 27 November 2026, reviewed frame by frame in its video, showed the full path: after "Create an account for free" edX opens a short questionnaire ("A few questions for you will help us get smarter"). The test clicks "Skip for now", which opens a "Thanks for letting us know." dialog, then clicks "Continue to edX" to reach the dashboard, where the signed-in checks run. The marketing-emails checkbox is ticked by default on the form; the test unticks it before submitting.
+
+edX also sends an "activate your account" email to the new address. The test does not open the mailbox: confirming the email is outside the automated scope, and the account is already created and signed in without it. For the report, one test account can be activated by hand from the team inbox to show that step.
 
 ### Rate limiting and CAPTCHA plan
 

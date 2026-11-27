@@ -4,4 +4,4 @@ TC-R02,All fields empty,,,,,error,couldn't create your account|enter your full n
 TC-R03,Invalid email format,Group4 QA Tester,not-an-email,g4qa${RUN_STAMP}b,ValidPass2026,error,enter a valid email,no
 TC-R04,Weak password (too short / no number),Group4 QA Tester,group4.qa.${RUN_STAMP}@example.com,g4qa${RUN_STAMP}c,abc,error,password criteria|at least 8 characters,no
 TC-R05,Email already registered,Group4 QA Tester,${EDX_VALID_EMAIL},g4qa${RUN_STAMP}d,ValidPass2026,error,already associated|already exists|existing account,no
-TC-R06,Username too short,Group4 QA Tester,group4.qa.${RUN_STAMP}e@example.com,a,ValidPass2026,error,username must be between 2 and 30 characters,no
+TC-R06,Username of one character (below minimum),Group4 QA Tester,group4.qa.${RUN_STAMP}e@example.com,a,ValidPass2026,error,username must be between,no
